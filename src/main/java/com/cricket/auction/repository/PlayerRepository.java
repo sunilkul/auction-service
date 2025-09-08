@@ -13,7 +13,7 @@ import java.util.List;
 public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
     @Query(value = "SELECT p.id,p.playerName as name,p.photo,p.basePrice,p.playerStats AS stats,\n" +
-            "p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName\n" +
+            "p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName, p.isNewPlayer\n" +
             "FROM tblPlayer p\n" +
             "LEFT JOIN tblPlayerSkill ps ON p.skillId = ps.id\n" +
             "LEFT JOIN tblTeamPlayer tp ON p.id = tp.playerId\n" +

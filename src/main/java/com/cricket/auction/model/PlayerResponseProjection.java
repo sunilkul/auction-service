@@ -17,5 +17,5 @@ public interface PlayerResponseProjection {
     public Integer getSoldPrice();
     public Integer getTeamId() ;
     public String getTeamName() ;
-
+    public Integer getIsNewPlayer();
 }

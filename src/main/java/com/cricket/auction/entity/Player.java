@@ -23,6 +23,7 @@ public class Player {
     // Example stats as JSON string (or use a separate table for normalized stats)
     @Column(columnDefinition = "nvarchar(4000)")
     private String playerStats;
+    private Integer isNewPlayer;
     // getters/setters
     public enum Status { SOLD, UNSOLD }
 }

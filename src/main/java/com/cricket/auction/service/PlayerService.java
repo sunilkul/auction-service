@@ -43,7 +43,8 @@ public class PlayerService {
                 p.getSkillName(),
                 p.getSoldPrice(),
                 p.getTeamId(),
-                p.getTeamName()
+                p.getTeamName(),
+                    p.getIsNewPlayer()
             );
         }).collect(Collectors.toList());
     }

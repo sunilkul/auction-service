@@ -25,4 +25,5 @@ public class PlayerResponse {
     private Integer soldPrice;
     private Integer teamId;
     private String teamName;
+    private Integer isNewPlayer;
 }
