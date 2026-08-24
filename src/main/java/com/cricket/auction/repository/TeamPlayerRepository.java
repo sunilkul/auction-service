@@ -8,6 +8,5 @@ import java.util.List;
 
 @Repository
 public interface TeamPlayerRepository extends JpaRepository<TeamPlayer, Integer> {
-    List<TeamPlayer> findByTeamId(Long teamId);
-    List<TeamPlayer> findByPlayerId(Long playerId);
+
 }

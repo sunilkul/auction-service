@@ -10,7 +10,7 @@ description = 'Cricket auction project'
 
 java {
 	toolchain {
-		languageVersion = JavaLanguageVersion.of(17)
+		languageVersion = JavaLanguageVersion.of(21)
 	}
 }
 
@@ -21,7 +21,8 @@ repositories {
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	runtimeOnly 'com.microsoft.sqlserver:mssql-jdbc'
+	// MySQL JDBC Driver (Loaded at runtime)
+	runtimeOnly("com.mysql:mysql-connector-j")
 	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:2.2.0' // Swagger UI
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'

@@ -25,4 +25,6 @@ public class TeamPlayer {
 
     private LocalDateTime soldAt;
 
+    private Integer tournamentId;
+
 }

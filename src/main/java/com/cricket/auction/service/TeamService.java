@@ -17,4 +17,8 @@ public class TeamService {
     public List<TeamResponse> getTeams() {
         return teamRepository.fetchTeamResponse();
     }
+
+    public List<TeamResponse>   getNonAuctionTeams(Integer skillId,String groupCode) {
+        return teamRepository.fetchNonAuctionTeamResponse(skillId,groupCode);
+    }
 }

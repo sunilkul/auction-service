@@ -18,4 +18,7 @@ public interface PlayerResponseProjection {
     public Integer getTeamId() ;
     public String getTeamName() ;
     public Integer getIsNewPlayer();
+    public Integer getTournamentId();
+    public Integer getIsConsiderInAuction();
+    public String getGroupCode();
 }

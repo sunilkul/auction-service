@@ -18,4 +18,5 @@ public class TeamResponse {
     private Integer remainingPurse;
     private String poc1;
     private String poc2;
+    private Integer tournamentId;
 }

@@ -29,18 +29,21 @@ public class AuctionService {
         Team team = teamRepo.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found"));
 
-        if ("SOLD".equalsIgnoreCase(status)) {
+        if ("SOLD".equalsIgnoreCase(status) || "ASSIGNED".equalsIgnoreCase(status)) {
             if (team.getRemainingPurse() < soldPrice)
             {throw new RuntimeException("Insufficient purse");}
-            else{
+            else {
                 TeamPlayer teamPlayer = TeamPlayer.builder()
                         .playerId(playerId)
                         .teamId(teamId)
                         .soldPrice(soldPrice)
                         .soldAt(LocalDateTime.now())
+                        .tournamentId(player.getTournamentId())
                         .build();
-                player.setPlayerStatus(Player.Status.SOLD);
-                team.setRemainingPurse(team.getPurse() - soldPrice);
+                player.setPlayerStatus(Player.Status.valueOf(status));
+                if ("SOLD".equalsIgnoreCase(status)){
+                    team.setRemainingPurse(team.getRemainingPurse() - soldPrice);
+                }
                 teamRepo.save(team);
                 teamPlayerRepo.save(teamPlayer);
             }

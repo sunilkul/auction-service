@@ -18,6 +18,7 @@ public class Team {
     private Integer remainingPurse;
     private String poc1;
     private String poc2;
+    private Integer tournamentId;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "teamId")

@@ -26,4 +26,7 @@ public class PlayerResponse {
     private Integer teamId;
     private String teamName;
     private Integer isNewPlayer;
+    private Integer tournamentId;
+    private Integer isConsiderInAuction;
+    private String groupCode;
 }
