@@ -20,7 +20,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             "LEFT JOIN tblPlayerSkill ps ON p.skillId = ps.id\n" +
             "LEFT JOIN tblTeamPlayer tp ON p.id = tp.playerId\n" +
             "LEFT JOIN tblTeam t ON t.id = tp.teamId\n" +
-            "WHERE tr.isActive = 1 AND p.isConsiderInAuction = 0\n", nativeQuery = true)
+            "WHERE tr.isActive = 1 \n", nativeQuery = true)
     public List<PlayerResponseProjection> fetchPlayersInfo();
 
 

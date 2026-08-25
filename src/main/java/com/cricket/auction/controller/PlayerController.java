@@ -17,9 +17,9 @@ public class PlayerController {
     @Autowired
     private PlayerService playerService;
 
-    @GetMapping("/non-auctioned")
-    public ResponseEntity<List<PlayerResponse>> getNonAuctionedPlayers() {
-        List<PlayerResponse> players = playerService.getNonAuctionedPlayers();
+    @GetMapping("/all-players")
+    public ResponseEntity<List<PlayerResponse>> getAllPlayers() {
+        List<PlayerResponse> players = playerService.getPlayersInfo();
         return ResponseEntity.ok(players);
     }
 }
