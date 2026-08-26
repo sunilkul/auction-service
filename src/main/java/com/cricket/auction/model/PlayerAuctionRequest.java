@@ -3,8 +3,13 @@ package com.cricket.auction.model;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import lombok.Getter;
+import lombok.Setter;
 
+@Setter
+@Getter
 public class PlayerAuctionRequest {
+    // Getters and setters
     @NotNull(message = "Player ID is required")
     private Integer playerId;
 
@@ -18,14 +23,5 @@ public class PlayerAuctionRequest {
     @NotBlank(message = "Status is required")
     private String status;
 
-    // Getters and setters
-    public Integer getPlayerId() { return playerId; }
-    public void setPlayerId(Integer playerId) { this.playerId = playerId; }
-    public Integer getTeamId() { return teamId; }
-    public void setTeamId(Integer teamId) { this.teamId = teamId; }
-    public Integer getSoldPrice() { return soldPrice; }
-    public void setSoldPrice(Integer soldPrice) { this.soldPrice = soldPrice; }
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
 }
 

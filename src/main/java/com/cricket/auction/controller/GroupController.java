@@ -1,10 +1,10 @@
 package com.cricket.auction.controller;
 
 import com.cricket.auction.model.PlayerGroupMaster;
-import com.cricket.auction.model.PoolStatus;
 import com.cricket.auction.model.PlayerResponse;
-import com.cricket.auction.service.GroupService;
+import com.cricket.auction.model.PoolStatus;
 import com.cricket.auction.service.AuctionPoolService;
+import com.cricket.auction.service.GroupService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,11 +19,14 @@ import java.util.List;
 @Tag(name = "Pool Management API", description = "Endpoints for managing player pools by skill and category")
 public class GroupController {
 
-    @Autowired
-    private GroupService groupService;
+    private final GroupService groupService;
+    private final AuctionPoolService auctionPoolService;
 
     @Autowired
-    private AuctionPoolService auctionPoolService;
+    public GroupController(GroupService groupService, AuctionPoolService auctionPoolService) {
+        this.groupService = groupService;
+        this.auctionPoolService = auctionPoolService;
+    }
 
     @GetMapping
     @Operation(summary = "Get all groups", description = "Returns all player groups (legacy endpoint)")
