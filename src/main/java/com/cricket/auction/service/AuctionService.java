@@ -52,6 +52,7 @@ public class AuctionService {
         } else {
             player.setPlayerStatus(Player.Status.UNSOLD);
         }
+        return playerRepo.save(player);
     }
 
     @Transactional
