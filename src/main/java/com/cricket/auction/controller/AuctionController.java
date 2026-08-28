@@ -47,6 +47,12 @@ public class AuctionController {
         return playerService.getNonAuctionedPlayers();
     }
 
+    @GetMapping("/players/last-sold")
+    @Operation(summary = "Get last 3 sold players", description = "Returns details of the most recent 3 sold players from the active tournament.")
+    public List<PlayerResponse> getLastThreeSoldPlayers() {
+        return playerService.getLastThreeSoldPlayers();
+    }
+
     @PostMapping("/players/auction")
     @Operation(summary = "Update player auction status", description = "Updates the auction status of a player (SOLD/UNSOLD) and assigns them to a team. This endpoint works across all pools.")
     public Player updatePlayerAuction(@Valid @RequestBody PlayerAuctionRequest request) {

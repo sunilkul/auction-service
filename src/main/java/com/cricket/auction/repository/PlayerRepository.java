@@ -88,4 +88,19 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             ORDER BY p.groupCode , p.id""", nativeQuery = true)
     List<PlayerResponseProjection> getNextPoolForSkill(Integer skillId, Integer tournamentId);
 
+    @Query(value = """
+            SELECT p.id,p.playerName as name,p.photo,p.basePrice,p.playerStats AS stats,
+            p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName,
+            p.isNewPlayer,p.tournamentId,p.isConsiderInAuction,p.groupCode
+            FROM tblTeamPlayer tp
+            JOIN tblPlayer p ON p.id = tp.playerId
+            JOIN tblTournament tr ON p.tournamentId = tr.id
+            LEFT JOIN tblPlayerSkill ps ON p.skillId = ps.id
+            LEFT JOIN tblTeam t ON t.id = tp.teamId
+            WHERE tr.isActive = 1 AND p.playerStatus = 'SOLD'
+            ORDER BY tp.soldAt DESC, tp.id DESC
+            LIMIT 3
+            """, nativeQuery = true)
+    List<PlayerResponseProjection> fetchLastThreeSoldPlayers();
+
 }
