@@ -99,8 +99,8 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             LEFT JOIN tblTeam t ON t.id = tp.teamId
             WHERE tr.isActive = 1 AND p.playerStatus = 'SOLD'
             ORDER BY tp.soldAt DESC, tp.id DESC
-            LIMIT 3
+            LIMIT 5
             """, nativeQuery = true)
-    List<PlayerResponseProjection> fetchLastThreeSoldPlayers();
+    List<PlayerResponseProjection> fetchLastFiveSoldPlayers();
 
 }

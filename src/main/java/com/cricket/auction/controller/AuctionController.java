@@ -48,9 +48,9 @@ public class AuctionController {
     }
 
     @GetMapping("/players/last-sold")
-    @Operation(summary = "Get last 3 sold players", description = "Returns details of the most recent 3 sold players from the active tournament.")
-    public List<PlayerResponse> getLastThreeSoldPlayers() {
-        return playerService.getLastThreeSoldPlayers();
+    @Operation(summary = "Get last 5 sold players", description = "Returns details of the most recent 5 sold players from the active tournament.")
+    public List<PlayerResponse> getLastFiveSoldPlayers() {
+        return playerService.getLastFiveSoldPlayers();
     }
 
     @PostMapping("/players/auction")

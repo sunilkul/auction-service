@@ -66,8 +66,8 @@ public class PlayerService {
         return generatePlayerResponse(projections);
     }
 
-    public List<PlayerResponse> getLastThreeSoldPlayers() {
-        List<PlayerResponseProjection> projections = playerRepository.fetchLastThreeSoldPlayers();
+    public List<PlayerResponse> getLastFiveSoldPlayers() {
+        List<PlayerResponseProjection> projections = playerRepository.fetchLastFiveSoldPlayers();
         return generatePlayerResponse(projections);
     }
 }
