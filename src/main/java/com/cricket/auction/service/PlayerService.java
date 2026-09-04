@@ -3,6 +3,7 @@ package com.cricket.auction.service;
 import com.cricket.auction.model.PlayerResponse;
 import com.cricket.auction.model.PlayerResponseProjection;
 import com.cricket.auction.repository.PlayerRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,21 +25,20 @@ public class PlayerService {
     public List<PlayerResponse> generatePlayerResponse(List<PlayerResponseProjection> projections) {
         ObjectMapper objectMapper = new ObjectMapper();
         return projections.stream().map(p -> {
-            Object statsObj = p.getStats();
+            String statsStr = p.getStats();
             Map<String, Object> statsMap = null;
-            if (statsObj instanceof String statsStr) {
+            if (statsStr != null) {
                 try {
-                    statsMap = objectMapper.readValue(statsStr, Map.class);
+                    statsMap = objectMapper.readValue(statsStr, new TypeReference<>() {});
                 } catch (Exception e) {
-                    statsMap = null;
+                    logger.debug("Unable to parse player stats JSON for player {}", p.getId(), e);
                 }
-            } else if (statsObj instanceof Map) {
-                statsMap = (Map<String, Object>) statsObj;
             }
             return new PlayerResponse(
                     p.getId(),
                     p.getName(),
                     p.getPhoto(),
+                    p.getDescription(),
                     p.getBasePrice(),
                     statsMap,
                     p.getStatus(),
@@ -66,8 +66,10 @@ public class PlayerService {
         return generatePlayerResponse(projections);
     }
 
-    public List<PlayerResponse> getLastFiveSoldPlayers() {
-        List<PlayerResponseProjection> projections = playerRepository.fetchLastFiveSoldPlayers();
+    public List<PlayerResponse> getLastSoldPlayers(Integer count) {
+        List<PlayerResponseProjection> projections = count == null
+                ? playerRepository.fetchAllLastSoldPlayers()
+                : playerRepository.fetchLastSoldPlayers(count);
         return generatePlayerResponse(projections);
     }
 }

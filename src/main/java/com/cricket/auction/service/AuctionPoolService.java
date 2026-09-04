@@ -171,6 +171,7 @@ public class AuctionPoolService {
                     p.getId(),
                     p.getName(),
                     p.getPhoto(),
+                    p.getDescription(),
                     p.getBasePrice(),
                     statsMap,
                     p.getStatus(),

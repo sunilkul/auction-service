@@ -48,9 +48,9 @@ public class AuctionController {
     }
 
     @GetMapping("/players/last-sold")
-    @Operation(summary = "Get last 5 sold players", description = "Returns details of the most recent 5 sold players from the active tournament.")
-    public List<PlayerResponse> getLastFiveSoldPlayers() {
-        return playerService.getLastFiveSoldPlayers();
+    @Operation(summary = "Get last sold players", description = "Returns details of the most recent sold players from the active tournament. Provide an optional count to limit the number of records; omit it to fetch all sold players.")
+    public List<PlayerResponse> getLastSoldPlayers(@RequestParam(required = false, defaultValue = "5") @Parameter(description = "Number of records to fetch") Integer count) {
+        return playerService.getLastSoldPlayers(count);
     }
 
     @PostMapping("/players/auction")

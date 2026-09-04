@@ -16,6 +16,7 @@ public class Player {
     private String playerName;
     private Integer skillId;
     private String photo;
+    private String description;
     private Integer basePrice;
     @Enumerated(EnumType.STRING)
     private Status playerStatus; // SOLD, UNSOLD, NOT_ASSIGNED, ASSIGNED

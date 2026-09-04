@@ -1,117 +1,181 @@
-# ⚡ Auction Service (Cricket Auction)
+# Auction Service
 
-A lightweight Spring Boot service for managing cricket player auctions (teams, players, pools).
+Spring Boot REST service for managing cricket player auctions — teams, players, pools, and bid outcomes.
 
-🎯 Key highlights
-- Java + Spring Boot
-- MySQL-backed (see MY-SQL-TABLE.md)
-- Port: 8282 (configurable in src/main/resources/application.properties)
+## Prerequisites
 
-Prerequisites
-- Java 11+ (or as required by gradle build)
-- MySQL server
-- Gradle (wrapper included)
+- Java 21
+- MySQL 8.x (or Docker)
+- Gradle (wrapper included — no local install needed)
 
-Quickstart
-1. Start MySQL and create the schema/tables:
+## Quickstart
 
-   Open a terminal in the repo root and run (Windows/Unix):
+### Option A — Docker Compose (recommended)
 
-   - Option A: run SQL file directly
-     mysql -u root -p < "MY-SQL-TABLE.md"
+```bash
+docker compose up -d
+```
 
-   - Option B: import inside MySQL client
-     mysql -u root -p
-     mysql> SOURCE C:/path/to/repo/MY-SQL-TABLE.md;
+Starts MySQL 8.0 on port 3306 and auto-loads the schema. Then seed data and run the app:
 
-   Note: The SQL script creates database `epl_auction` and all tables.
+```bash
+# Seed reference master data (skills, tournament, teams, base prices)
+mysql -u root -pRoot@123 epl_auction < sql-scripts/production/02-SQL_SEED_REFERENCE_MASTER_DATA.sql
 
-2. Load test data (optional):
+# Load players (run all four, or pick the skills you need)
+mysql -u root -pRoot@123 epl_auction < sql-scripts/production/03-SQL_LOAD_PRODUCTION_ALL_ROUNDERS.sql
+mysql -u root -pRoot@123 epl_auction < sql-scripts/production/04-SQL_LOAD_PRODUCTION_BOWLERS.sql
+mysql -u root -pRoot@123 epl_auction < sql-scripts/production/05-SQL_LOAD_PRODUCTION_BATSMEN.sql
+mysql -u root -pRoot@123 epl_auction < sql-scripts/production/06-SQL_LOAD_PRODUCTION_WILDCARDS.sql
 
-   mysql -u root -p epl_auction < "src/TEST-DATA.md"
+./gradlew bootRun
+```
 
-3. Configure DB credentials
-   - Default datasource in src/main/resources/application.properties uses:
-     jdbc:mysql://localhost:3306/epl_auction
-     username: root
-     password: (set in your local file)
-   - Update the file or provide environment variables as needed.
+### Option B — Local MySQL
 
-4. Run the service (Windows):
-   gradlew.bat bootRun
+```bash
+# Create schema
+mysql -u root -p < sql-scripts/production/00-MY-SQL-TABLE.sql
 
-   Or (Unix/mac):
-   ./gradlew bootRun
+# Seed data (same commands as above)
+mysql -u root -pRoot@123 epl_auction < sql-scripts/production/02-SQL_SEED_REFERENCE_MASTER_DATA.sql
+...
 
-5. API will be available at: http://localhost:8282
+./gradlew bootRun
+```
 
-API Endpoints (summary)
+### Development / test data
 
-Base: http://localhost:8282
+Use the self-contained dev seed instead of the production scripts:
 
-- GET /api/teams
-  - Description: Get all teams
-  - Example: curl http://localhost:8282/api/teams
+```bash
+mysql -u root -pRoot@123 epl_auction < sql-scripts/development/01-SQL_DEV_TEST_DATA.sql
+```
 
-- GET /api/players
-  - Description: Get all players (non-auctioned by default in current code)
-  - Example: curl http://localhost:8282/api/players
+This truncates all tables and loads 12 fictional players across all four skill categories with pre-seeded auction outcomes (SOLD / UNSOLD / ASSIGNED) for end-to-end testing.
 
-- POST /api/players/auction
-  - Description: Update player auction status and assign to a team
-  - Body: JSON -> { "playerId": <id>, "teamId": <id>, "soldPrice": <price>, "status": "SOLD" }
-  - Example: curl -X POST -H "Content-Type: application/json" -d @payload.json http://localhost:8282/api/players/auction
+## Configuration
 
-- GET /api/auction/next-pool-players?skillId=<skillId>&tournamentId=<tournamentId>
-  - Description: Returns players from the next active pool for a skill
+`src/main/resources/application.properties`:
 
-Skill endpoints
-- GET /api/skills
-  - Description: Get all skills
+| Property | Default |
+|---|---|
+| `spring.datasource.url` | `jdbc:mysql://localhost:3306/epl_auction` |
+| `spring.datasource.username` | `root` |
+| `spring.datasource.password` | `Root@123` |
+| `server.port` | `8282` |
+| `spring.jpa.show-sql` | `true` |
 
-Team helper
-- GET /api/teams/non-auction?skillId=<skillId>&groupCode=<groupCode>
-  - Description: Returns non-auction teams (expects skillId and groupCode query params)
+`spring.jpa.hibernate.ddl-auto=none` — Hibernate never auto-creates or alters tables. All schema changes must be applied manually.
 
-Player helper
-- GET /api/players/non-auctioned
-  - Description: Returns players not yet auctioned
+## Build & Run
 
-Group / Pool management (Pool Management API)
-- GET /api/groups
-  - Get all groups
+```bash
+./gradlew build       # compile + test
+./gradlew bootRun     # start on port 8282
+./gradlew test        # run tests only
+```
 
-- GET /api/groups/pools?skillId=<skillId>&tournamentId=<tournamentId>
-  - Get all pools for a skill
+## API Reference
 
-- GET /api/groups/pools/next?skillId=<skillId>&tournamentId=<tournamentId>
-  - Get next active pool for a skill
+Base URL: `http://localhost:8282`  
+Swagger UI: `http://localhost:8282/swagger-ui.html`
 
-- GET /api/groups/pools/{poolCode}/players?skillId=<skillId>
-  - Get players in a specific pool
+All endpoints are open (no auth, CORS wildcard).
 
-- GET /api/groups/pools/next/players?skillId=<skillId>&tournamentId=<tournamentId>
-  - Get players for the next active pool
+---
 
-- GET /api/groups/pools/{poolCode}/status?skillId=<skillId>
-  - Get pool status (total/sold/remaining)
+### Auction (`/api`)
 
-- GET /api/groups/pools/{poolCode}/complete?skillId=<skillId>
-  - Check if pool is complete (sold/unsold)
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/teams` | All teams for the active tournament |
+| `GET` | `/api/players` | Players with status `NOT_ASSIGNED` (available for auction) |
+| `GET` | `/api/players/last-sold` | Last N sold players. Optional `?count=` (default `5`) |
+| `POST` | `/api/players/auction` | Submit a bid — see request body below |
+| `POST` | `/api/players/reset-auction?playerId={id}` | Reset a player back to `NOT_ASSIGNED` |
+| `GET` | `/api/auction/next-pool-players?skillId={id}&tournamentId={id}` | Players in the next active pool for a skill |
 
-Notes & Tips
-- application.properties already points to MySQL on localhost:3306 and server.port=8282.
-- If MY-SQL-TABLE.md has .md extension and your tools expect .sql, rename it to .sql or run import via the mysql client using SOURCE.
-- For debugging enable spring.jpa.show-sql=true in application.properties (already set).
+**POST `/api/players/auction` — request body**
 
-Useful commands
-- Build: gradlew.bat build
-- Run tests: gradlew.bat test
+```json
+{
+  "playerId": 1,
+  "teamId": 2,
+  "soldPrice": 8500,
+  "status": "SOLD"
+}
+```
 
-Contact
-- Repo maintainer: Sunil Kulkarni
+`status` accepted values: `SOLD`, `UNSOLD`, `ASSIGNED`
 
-License
-- (Add license here)
+- `SOLD` — writes a `tblTeamPlayer` record and deducts `soldPrice` from the team's `remainingPurse`.
+- `ASSIGNED` — writes a `tblTeamPlayer` record but does **not** deduct purse.
+- `UNSOLD` — updates player status only; no team record created.
 
-Happy auctioning! 🏏🚀
+---
+
+### Players (`/api/players`)
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/players/all-players` | All players regardless of status |
+
+---
+
+### Teams (`/api/teams`)
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/teams/non-auction?skillId={id}&groupCode={code}` | First non-auction team for a given skill and pool |
+
+---
+
+### Groups / Pools (`/api/groups`)
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/groups` | All pool groups |
+| `GET` | `/api/groups/pools?skillId={id}&tournamentId={id}` | All pools for a skill |
+| `GET` | `/api/groups/pools/next?skillId={id}&tournamentId={id}` | Next active pool (first pool with `NOT_ASSIGNED` players) |
+| `GET` | `/api/groups/pools/{poolCode}/players?skillId={id}` | Players in a specific pool |
+| `GET` | `/api/groups/pools/next/players?skillId={id}&tournamentId={id}` | Players in the next active pool |
+| `GET` | `/api/groups/pools/{poolCode}/status?skillId={id}` | Pool counts: total / sold / remaining |
+| `GET` | `/api/groups/pools/{poolCode}/complete?skillId={id}` | `true` if all players in the pool are SOLD or UNSOLD |
+
+---
+
+### Skills (`/api/skills`)
+
+| Method | Path | Description |
+|---|---|---|
+| `GET` | `/api/skills` | All skill categories (BATSMAN, BOWLER, ALL_ROUNDER, WILDCARD) |
+
+---
+
+## Error Responses
+
+All errors return `{"error": "<message>"}` with the appropriate HTTP status:
+
+| Scenario | Status |
+|---|---|
+| Player not found | 404 |
+| Team not found | 404 |
+| Team has insufficient purse | 422 |
+| Invalid state (e.g. resetting a `NOT_ASSIGNED` player) | 400 |
+
+## SQL Scripts
+
+```
+sql-scripts/
+├── production/
+│   ├── 00-MY-SQL-TABLE.sql                       # Master schema
+│   ├── 01-SQL_CLEANUP_AUCTION_DATA.sql            # Truncate all tables
+│   ├── 02-SQL_SEED_REFERENCE_MASTER_DATA.sql      # Skills, tournament, teams, base prices
+│   ├── 03-SQL_LOAD_PRODUCTION_ALL_ROUNDERS.sql
+│   ├── 04-SQL_LOAD_PRODUCTION_BOWLERS.sql
+│   ├── 05-SQL_LOAD_PRODUCTION_BATSMEN.sql
+│   └── 06-SQL_LOAD_PRODUCTION_WILDCARDS.sql
+└── development/
+    └── 01-SQL_DEV_TEST_DATA.sql                   # Self-contained dev seed
+```
