@@ -9,6 +9,7 @@ public interface PlayerResponseProjection {
     public Integer getId();
     public String getName();
     public String getPhoto();
+    public String getDescription();
     public Integer getBasePrice();
     public String getStats();
     public String getStatus() ;

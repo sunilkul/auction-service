@@ -13,7 +13,7 @@ import java.util.List;
 public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
     @Query(value = """
-            SELECT p.id,p.playerName as name,p.photo,p.basePrice,p.playerStats AS stats,
+            SELECT p.id,p.playerName as name,p.photo,p.description as description,p.basePrice,p.playerStats AS stats,
             p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName, p.isNewPlayer
             FROM tblPlayer p
             JOIN tblTournament tr ON p.tournamentId = tr.id
@@ -33,7 +33,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
 
 
     @Query(value = """
-            SELECT p.id,p.playerName as name,p.photo,p.basePrice,p.playerStats AS stats,
+            SELECT p.id,p.playerName as name,p.photo,p.description as description,p.basePrice,p.playerStats AS stats,
             p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName, p.isNewPlayer, p.groupCode,p.isConsiderInAuction
             FROM tblPlayer p
             JOIN tblTournament tr ON p.tournamentId = tr.id
@@ -52,7 +52,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     List<String> getPoolsBySkill(Integer skillId, Integer tournamentId);
 
     @Query(value = """
-            SELECT p.id,p.playerName as name,p.photo,p.basePrice,p.playerStats as stats,
+            SELECT p.id,p.playerName as name,p.photo,p.description as description,p.basePrice,p.playerStats as stats,
             p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id as teamId,t.teamName,
             p.isNewPlayer, p.groupCode
             FROM tblPlayer p
@@ -75,7 +75,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     Integer getPoolTotalCount(Integer skillId, String poolCode);
 
     @Query(value = """
-            SELECT p.id,p.playerName as name,p.photo,p.basePrice,p.playerStats as stats,
+            SELECT p.id,p.playerName as name,p.photo,p.description as description,p.basePrice,p.playerStats as stats,
             p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id as teamId,t.teamName,
             p.isNewPlayer, p.groupCode
             FROM tblPlayer p
@@ -89,7 +89,7 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
     List<PlayerResponseProjection> getNextPoolForSkill(Integer skillId, Integer tournamentId);
 
     @Query(value = """
-            SELECT p.id,p.playerName as name,p.photo,p.basePrice,p.playerStats AS stats,
+            SELECT p.id,p.playerName as name,p.photo,p.description as description,p.basePrice,p.playerStats AS stats,
             p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName,
             p.isNewPlayer,p.tournamentId,p.isConsiderInAuction,p.groupCode
             FROM tblTeamPlayer tp
@@ -99,8 +99,22 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             LEFT JOIN tblTeam t ON t.id = tp.teamId
             WHERE tr.isActive = 1 AND p.playerStatus = 'SOLD'
             ORDER BY tp.soldAt DESC, tp.id DESC
-            LIMIT 5
+            LIMIT ?1
             """, nativeQuery = true)
-    List<PlayerResponseProjection> fetchLastFiveSoldPlayers();
+    List<PlayerResponseProjection> fetchLastSoldPlayers(Integer limit);
+
+    @Query(value = """
+            SELECT p.id,p.playerName as name,p.photo,p.description as description,p.basePrice,p.playerStats AS stats,
+            p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName,
+            p.isNewPlayer,p.tournamentId,p.isConsiderInAuction,p.groupCode
+            FROM tblTeamPlayer tp
+            JOIN tblPlayer p ON p.id = tp.playerId
+            JOIN tblTournament tr ON p.tournamentId = tr.id
+            LEFT JOIN tblPlayerSkill ps ON p.skillId = ps.id
+            LEFT JOIN tblTeam t ON t.id = tp.teamId
+            WHERE tr.isActive = 1 AND p.playerStatus = 'SOLD'
+            ORDER BY tp.soldAt DESC, tp.id DESC
+            """, nativeQuery = true)
+    List<PlayerResponseProjection> fetchAllLastSoldPlayers();
 
 }

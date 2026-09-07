@@ -17,6 +17,7 @@ public class PlayerResponse {
     private Integer id;
     private String name;
     private String photo;
+    private String description;
     private Integer basePrice;
     private Map<String,Object> stats;
     private String status; // SOLD, UNSOLD
