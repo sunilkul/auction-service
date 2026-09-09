@@ -66,6 +66,11 @@ public class PlayerService {
         return generatePlayerResponse(projections);
     }
 
+    public List<PlayerResponse> getPooledPlayers() {
+        List<PlayerResponseProjection> projections = playerRepository.fetchPooledPlayers();
+        return generatePlayerResponse(projections);
+    }
+
     public List<PlayerResponse> getLastSoldPlayers(Integer count) {
         List<PlayerResponseProjection> projections = count == null
                 ? playerRepository.fetchAllLastSoldPlayers()

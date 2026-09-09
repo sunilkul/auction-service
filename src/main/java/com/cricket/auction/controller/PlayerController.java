@@ -22,4 +22,10 @@ public class PlayerController {
         List<PlayerResponse> players = playerService.getPlayersInfo();
         return ResponseEntity.ok(players);
     }
+
+    @GetMapping("/pooled")
+    public ResponseEntity<List<PlayerResponse>> getPooledPlayers() {
+        List<PlayerResponse> players = playerService.getPooledPlayers();
+        return ResponseEntity.ok(players);
+    }
 }
