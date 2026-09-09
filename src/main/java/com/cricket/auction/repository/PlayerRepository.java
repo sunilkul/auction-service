@@ -20,9 +20,23 @@ public interface PlayerRepository extends JpaRepository<Player, Integer> {
             LEFT JOIN tblPlayerSkill ps ON p.skillId = ps.id
             LEFT JOIN tblTeamPlayer tp ON p.id = tp.playerId
             LEFT JOIN tblTeam t ON t.id = tp.teamId
-            WHERE tr.isActive = 1\s
+            WHERE tr.isActive = 1 AND p.playerStatus != 'POOLED'
             """, nativeQuery = true)
     List<PlayerResponseProjection> fetchPlayersInfo();
+
+    @Query(value = """
+            SELECT p.id,p.playerName as name,p.photo,p.description as description,p.basePrice,p.playerStats AS stats,
+            p.playerStatus as status,p.skillId,ps.skillName,tp.soldPrice,t.id AS teamId,t.teamName,
+            p.isNewPlayer,p.tournamentId,p.isConsiderInAuction,p.groupCode
+            FROM tblPlayer p
+            JOIN tblTournament tr ON p.tournamentId = tr.id
+            LEFT JOIN tblPlayerSkill ps ON p.skillId = ps.id
+            LEFT JOIN tblTeamPlayer tp ON p.id = tp.playerId
+            LEFT JOIN tblTeam t ON t.id = tp.teamId
+            WHERE tr.isActive = 1 AND p.playerStatus = 'POOLED'
+            ORDER BY p.id
+            """, nativeQuery = true)
+    List<PlayerResponseProjection> fetchPooledPlayers();
 
 
     @Query(value = "SELECT DISTINCT pg.skillId, pg.groupCode " +

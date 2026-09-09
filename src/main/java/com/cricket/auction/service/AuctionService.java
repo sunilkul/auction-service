@@ -3,6 +3,7 @@ package com.cricket.auction.service;
 import com.cricket.auction.entity.Player;
 import com.cricket.auction.entity.Team;
 import com.cricket.auction.entity.TeamPlayer;
+import com.cricket.auction.model.BulkAssignRequest;
 import com.cricket.auction.repository.PlayerRepository;
 import com.cricket.auction.repository.TeamPlayerRepository;
 import com.cricket.auction.repository.TeamRepository;
@@ -10,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 public class AuctionService {
@@ -28,31 +30,46 @@ public class AuctionService {
     public Player updatePlayerStatus(Integer playerId, Integer teamId, Integer soldPrice, String status) {
         Player player = playerRepo.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Player not found"));
+
+        if (player.getPlayerStatus() == Player.Status.SOLD || player.getPlayerStatus() == Player.Status.ASSIGNED) {
+            throw new IllegalStateException("Player is already auctioned. Reset first before re-auctioning.");
+        }
+
         Team team = teamRepo.findById(teamId)
                 .orElseThrow(() -> new RuntimeException("Team not found"));
 
         if ("SOLD".equalsIgnoreCase(status) || "ASSIGNED".equalsIgnoreCase(status)) {
             if (team.getRemainingPurse() < soldPrice) {
                 throw new RuntimeException("Insufficient purse");
-            } else {
-                TeamPlayer teamPlayer = TeamPlayer.builder()
-                        .playerId(playerId)
-                        .teamId(teamId)
-                        .soldPrice(soldPrice)
-                        .soldAt(LocalDateTime.now())
-                        .tournamentId(player.getTournamentId())
-                        .build();
-                player.setPlayerStatus(Player.Status.valueOf(status));
-                if ("SOLD".equalsIgnoreCase(status)) {
-                    team.setRemainingPurse(team.getRemainingPurse() - soldPrice);
-                }
-                teamRepo.save(team);
-                teamPlayerRepo.save(teamPlayer);
             }
+
+            TeamPlayer teamPlayer = TeamPlayer.builder()
+                    .playerId(playerId)
+                    .teamId(teamId)
+                    .soldPrice(soldPrice)
+                    .soldAt(LocalDateTime.now())
+                    .tournamentId(player.getTournamentId())
+                    .build();
+            player.setPlayerStatus(Player.Status.valueOf(status));
+
+            if ("SOLD".equalsIgnoreCase(status)) {
+                team.setRemainingPurse(team.getRemainingPurse() - soldPrice);
+            }
+
+            teamRepo.save(team);
+            teamPlayerRepo.save(teamPlayer);
         } else {
             player.setPlayerStatus(Player.Status.UNSOLD);
         }
+
         return playerRepo.save(player);
+    }
+
+    @Transactional
+    public void bulkAssignPlayers(List<BulkAssignRequest> assignments) {
+        for (BulkAssignRequest req : assignments) {
+            updatePlayerStatus(req.getPlayerId(), req.getTeamId(), 0, "ASSIGNED");
+        }
     }
 
     @Transactional
@@ -76,6 +93,22 @@ public class AuctionService {
         });
 
         player.setPlayerStatus(Player.Status.NOT_ASSIGNED);
+        return playerRepo.save(player);
+    }
+
+    @Transactional
+    public Player unassignPlayer(Integer playerId) {
+        Player player = playerRepo.findById(playerId)
+                .orElseThrow(() -> new RuntimeException("Player not found"));
+
+        if (player.getPlayerStatus() != Player.Status.ASSIGNED) {
+            throw new RuntimeException("Only ASSIGNED players can be moved to POOLED");
+        }
+
+        // Revert ASSIGNED side effects: remove latest TeamPlayer mapping created at assignment time.
+        teamPlayerRepo.findTopByPlayerIdOrderByIdDesc(playerId).ifPresent(teamPlayerRepo::delete);
+
+        player.setPlayerStatus(Player.Status.POOLED);
         return playerRepo.save(player);
     }
 }

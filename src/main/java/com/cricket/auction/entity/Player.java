@@ -19,7 +19,7 @@ public class Player {
     private String description;
     private Integer basePrice;
     @Enumerated(EnumType.STRING)
-    private Status playerStatus; // SOLD, UNSOLD, NOT_ASSIGNED, ASSIGNED
+    private Status playerStatus; // SOLD, UNSOLD, NOT_ASSIGNED, ASSIGNED, POOLED
 
     // Example stats as JSON string (or use a separate table for normalized stats)
     @Column(columnDefinition = "nvarchar(4000)")
@@ -29,5 +29,5 @@ public class Player {
     private Integer isConsiderInAuction;
     private String groupCode;
     // getters/setters
-    public enum Status { SOLD, UNSOLD, NOT_ASSIGNED, ASSIGNED }
+    public enum Status { SOLD, UNSOLD, NOT_ASSIGNED, ASSIGNED, POOLED }
 }

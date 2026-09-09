@@ -1,21 +1,26 @@
 package com.cricket.auction.controller;
 
 import com.cricket.auction.entity.Player;
+import com.cricket.auction.model.BulkAssignRequest;
 import com.cricket.auction.model.PlayerAuctionRequest;
 import com.cricket.auction.model.PlayerResponse;
+import com.cricket.auction.model.PlayerGroupingResponse;
 import com.cricket.auction.model.TeamResponse;
 import com.cricket.auction.service.AuctionPoolService;
 import com.cricket.auction.service.AuctionService;
 import com.cricket.auction.service.PlayerService;
+import com.cricket.auction.service.StatsDistributionService;
 import com.cricket.auction.service.TeamService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -26,13 +31,16 @@ public class AuctionController {
     private final PlayerService playerService;
     private final TeamService teamService;
     private final AuctionPoolService auctionPoolService;
+    private final StatsDistributionService distributionService;
 
     @Autowired
-    public AuctionController(AuctionService auctionService, PlayerService playerService, TeamService teamService, AuctionPoolService auctionPoolService) {
+    public AuctionController(AuctionService auctionService, PlayerService playerService, TeamService teamService,
+                             AuctionPoolService auctionPoolService, StatsDistributionService distributionService) {
         this.auctionService = auctionService;
         this.playerService = playerService;
         this.teamService = teamService;
         this.auctionPoolService = auctionPoolService;
+        this.distributionService = distributionService;
     }
 
     @GetMapping("/teams")
@@ -69,6 +77,28 @@ public class AuctionController {
     @Operation(summary = "Get next pool players for skill", description = "Returns players from the next active pool for a skill. Use this to automatically get the next pool to auction.")
     public List<PlayerResponse> getNextPoolPlayers(@RequestParam @Parameter(description = "Skill ID") Integer skillId, @RequestParam @Parameter(description = "Tournament ID") Integer tournamentId) {
         return auctionPoolService.getNextPoolPlayers(skillId, tournamentId);
+    }
+
+    @PostMapping("/players/bulk-assign")
+    @Operation(summary = "Bulk assign players to teams", description = "Assigns multiple players to teams in a single atomic operation. All assignments use ASSIGNED status (no purse deduction). If any assignment fails, all changes are rolled back.")
+    public ResponseEntity<Map<String, Object>> bulkAssignPlayers(@Valid @RequestBody List<BulkAssignRequest> assignments) {
+        auctionService.bulkAssignPlayers(assignments);
+        return ResponseEntity.ok(Map.of("assigned", assignments.size()));
+    }
+
+    @PostMapping("/players/update-status")
+    @Operation(summary = "Update assigned player status", description = "Moves a player from ASSIGNED to POOLED and reverts assignment side effects by removing the latest team mapping entry.")
+    public Player unassignPlayer(@RequestParam @Parameter(description = "Player ID") Integer playerId) {
+        return auctionService.unassignPlayer(playerId);
+    }
+
+    @GetMapping("/auction/distribute-pooled-players")
+    @Operation(
+            summary = "Stats-based pooled player grouping",
+            description = "Ranks all POOLED players by their stats within each skill category (Batsman, Bowler, All-Rounder), then groups similarly ranked players into groups of up to 10."
+    )
+    public ResponseEntity<PlayerGroupingResponse> distributePooledPlayers() {
+        return ResponseEntity.ok(distributionService.groupPooledPlayers());
     }
 
 }
