@@ -496,7 +496,7 @@ INSERT INTO tblPlayer (
     'PL-1'
 ),
 (
-    'Abhishek S',
+    'Abhishek Shrivastava',
     1,
     NULL,
     'Explosive Scorer (SR 196.00)',
@@ -1367,19 +1367,6 @@ INSERT INTO tblPlayer (
     'PL-1'
 ),
 (
-    'Tanay Bhuta',
-    3,
-    NULL,
-    'Consistent All-Rounder (192 Runs, 19 Wkts, SR 158.68)',
-    4000,
-    'POOLED',
-    '{"matches":19,"runs":192,"strikeRate":158.68,"Wickets":19,"economy":8.73}',
-    0,
-    1,
-    0,
-    'PL-1'
-),
-(
     'Umesh Sapariya',
     1,
     NULL,
@@ -1396,7 +1383,7 @@ INSERT INTO tblPlayer (
     'Vaibhav Mhaskar',
     1,
     NULL,
-    'Wildcard / New Entry',
+    '',
     4000,
     'POOLED',
     '{"matches":11,"runs":0,"strikeRate":0.00,"Wickets":0,"economy":0.00}',
@@ -1439,6 +1426,19 @@ INSERT INTO tblPlayer (
     4000,
     'POOLED',
     '{"matches":0,"runs":0,"strikeRate":0.00,"Wickets":0,"economy":0.00}',
+    0,
+    1,
+    0,
+    'PL-1'
+),
+(
+    'Vivek Chaturvedi',
+    3,
+    NULL,
+    'Attacking Opening Batter (367 Runs, SR 135.33)',
+    4000,
+    'POOLED',
+    '{"matches":37,"runs":367,"strikeRate":135.33,"Wickets":17,"economy":8.78}',
     0,
     1,
     0,

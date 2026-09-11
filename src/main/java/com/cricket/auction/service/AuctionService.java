@@ -31,37 +31,30 @@ public class AuctionService {
         Player player = playerRepo.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Player not found"));
 
-        if (player.getPlayerStatus() == Player.Status.SOLD || player.getPlayerStatus() == Player.Status.ASSIGNED) {
-            throw new IllegalStateException("Player is already auctioned. Reset first before re-auctioning.");
-        }
-
-        Team team = teamRepo.findById(teamId)
-                .orElseThrow(() -> new RuntimeException("Team not found"));
-
         if ("SOLD".equalsIgnoreCase(status) || "ASSIGNED".equalsIgnoreCase(status)) {
+            Team team = teamRepo.findById(teamId)
+                    .orElseThrow(() -> new RuntimeException("Team not found"));
             if (team.getRemainingPurse() < soldPrice) {
                 throw new RuntimeException("Insufficient purse");
+            } else {
+                TeamPlayer teamPlayer = TeamPlayer.builder()
+                        .playerId(playerId)
+                        .teamId(teamId)
+                        .soldPrice(soldPrice)
+                        .soldAt(LocalDateTime.now())
+                        .tournamentId(player.getTournamentId())
+                        .build();
+                player.setPlayerStatus(Player.Status.valueOf(status));
+                if ("SOLD".equalsIgnoreCase(status)) {
+                    team.setRemainingPurse(team.getRemainingPurse() - soldPrice);
+                }
+                teamRepo.save(team);
+                teamPlayerRepo.save(teamPlayer);
             }
-
-            TeamPlayer teamPlayer = TeamPlayer.builder()
-                    .playerId(playerId)
-                    .teamId(teamId)
-                    .soldPrice(soldPrice)
-                    .soldAt(LocalDateTime.now())
-                    .tournamentId(player.getTournamentId())
-                    .build();
-            player.setPlayerStatus(Player.Status.valueOf(status));
-
-            if ("SOLD".equalsIgnoreCase(status)) {
-                team.setRemainingPurse(team.getRemainingPurse() - soldPrice);
-            }
-
-            teamRepo.save(team);
-            teamPlayerRepo.save(teamPlayer);
         } else {
-            player.setPlayerStatus(Player.Status.UNSOLD);
+            //player.setPlayerStatus(Player.Status.UNSOLD);
+            player.setPlayerStatus( Player.Status.valueOf(status));
         }
-
         return playerRepo.save(player);
     }
 
@@ -101,8 +94,8 @@ public class AuctionService {
         Player player = playerRepo.findById(playerId)
                 .orElseThrow(() -> new RuntimeException("Player not found"));
 
-        if (player.getPlayerStatus() != Player.Status.ASSIGNED) {
-            throw new RuntimeException("Only ASSIGNED players can be moved to POOLED");
+        if (player.getPlayerStatus() != Player.Status.ASSIGNED && player.getPlayerStatus() != Player.Status.UNSOLD) {
+            throw new RuntimeException("Only ASSIGNED or UNSOLD players can be moved to POOLED");
         }
 
         // Revert ASSIGNED side effects: remove latest TeamPlayer mapping created at assignment time.

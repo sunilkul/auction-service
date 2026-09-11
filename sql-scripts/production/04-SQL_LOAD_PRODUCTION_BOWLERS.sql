@@ -72,18 +72,19 @@ INSERT INTO tblPlayer (
     'BW-1'
 ),
 (
-    'Sangram T. Patil',
+    'Rakesh Ghonmode',
     2,
-    'https://static.cdn.epam.com/avatar/1586e3656afa0b8467f0e494d2bd01fb.jpg',
-    'Reliable Control Bowler (Eco 7.78)',
+    'https://static.cdn.epam.com/avatar/5a156e8e688656e62aaef66eaa2ce37c.jpg',
+    'Top-tier Wicket-Taker (19 Wkts, Eco 9.29)',
     4000,
     'NOT_ASSIGNED',
-    '{"matches":16,"runs":160,"strikeRate":125.98,"Wickets":16,"economy":7.78}',
+    '{"matches":22,"runs":385,"strikeRate":194.44,"Wickets":19,"economy":9.29}',
     0,
     1,
     0,
     'BW-1'
-),
+)
+,
 (
     'Onkar Joshi',
     2,
@@ -98,13 +99,13 @@ INSERT INTO tblPlayer (
     'BW-1'
 ),
 (
-    'Shreyash Naik',
+    'Rohit Baghel',
     2,
-    'https://static.cdn.epam.com/avatar/66aea0a441677347c340d310488c53ea.jpg',
-    'Steady Middle-Overs Option (Eco 8.12)',
+    'https://static.cdn.epam.com/avatar/1d1e3abd57070aac4801b6d79e4a5d23.jpg',
+    'Dynamic all-rounder with strong batting and bowling',
     4000,
     'NOT_ASSIGNED',
-    '{"matches":33,"runs":76,"strikeRate":73.08,"Wickets":17,"economy":8.12}',
+    '{"matches":49,"runs":304,"strikeRate":169.83,"Wickets":45,"economy":7.30}',
     0,
     1,
     0,
