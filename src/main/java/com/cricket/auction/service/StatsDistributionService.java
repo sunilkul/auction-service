@@ -27,20 +27,48 @@ public class StatsDistributionService {
         List<PlayerResponseProjection> pooledPlayers = playerRepository.fetchPooledPlayers();
 
         if (pooledPlayers.isEmpty()) {
-            PlayerGroupingResponse empty = new PlayerGroupingResponse();
-            empty.setSkillGroups(List.of());
-            empty.setSummary("No POOLED players found to group.");
-            return empty;
+            return createEmptyResponse();
         }
 
-        List<PlayerResponseProjection> eligiblePlayers = pooledPlayers.stream()
+        List<PlayerResponseProjection> eligiblePlayers = filterEligiblePlayers(pooledPlayers);
+        Map<String, List<PlayerResponseProjection>> playersBySkill = groupBySkill(eligiblePlayers);
+
+        List<PlayerGroupingResponse.SkillGroup> skillGroups = buildSkillGroups(playersBySkill);
+
+        return createResponse(eligiblePlayers.size(), skillGroups, pooledPlayers.size() - eligiblePlayers.size());
+    }
+
+    private PlayerGroupingResponse createEmptyResponse() {
+        PlayerGroupingResponse emptyResponse = new PlayerGroupingResponse();
+        emptyResponse.setSkillGroups(List.of());
+        emptyResponse.setSummary("No POOLED players found to group.");
+        return emptyResponse;
+    }
+
+    private List<PlayerResponseProjection> filterEligiblePlayers(List<PlayerResponseProjection> players) {
+        return players.stream()
                 .filter(p -> !"Wildcard".equals(normalizeSkill(p.getSkillName())))
                 .toList();
+    }
 
-        Map<String, List<PlayerResponseProjection>> bySkill = groupBySkill(eligiblePlayers);
+    private Map<String, List<PlayerResponseProjection>> groupBySkill(List<PlayerResponseProjection> players) {
+        Map<String, List<PlayerResponseProjection>> skillGroups = new LinkedHashMap<>();
+        skillGroups.put("All-Rounder", new ArrayList<>());
+        skillGroups.put("Batsman", new ArrayList<>());
+        skillGroups.put("Bowler", new ArrayList<>());
 
+        for (PlayerResponseProjection player : players) {
+            skillGroups.computeIfAbsent(normalizeSkill(player.getSkillName()), k -> new ArrayList<>()).add(player);
+        }
+
+        skillGroups.entrySet().removeIf(entry -> entry.getValue().isEmpty());
+        return skillGroups;
+    }
+
+    private List<PlayerGroupingResponse.SkillGroup> buildSkillGroups(Map<String, List<PlayerResponseProjection>> playersBySkill) {
         List<PlayerGroupingResponse.SkillGroup> skillGroups = new ArrayList<>();
-        for (Map.Entry<String, List<PlayerResponseProjection>> entry : bySkill.entrySet()) {
+
+        for (Map.Entry<String, List<PlayerResponseProjection>> entry : playersBySkill.entrySet()) {
             String skill = entry.getKey();
             List<PlayerResponseProjection> players = entry.getValue();
             try {
@@ -52,48 +80,37 @@ public class StatsDistributionService {
             }
         }
 
+        return skillGroups;
+    }
+
+    private PlayerGroupingResponse createResponse(int eligiblePlayerCount, List<PlayerGroupingResponse.SkillGroup> skillGroups, int wildcardCount) {
         int totalGroups = skillGroups.stream().mapToInt(sg -> sg.getGroups().size()).sum();
-        int wildcardCount = pooledPlayers.size() - eligiblePlayers.size();
 
         PlayerGroupingResponse response = new PlayerGroupingResponse();
         response.setSkillGroups(skillGroups);
         response.setSummary(String.format(
                 "Ranked and grouped %d POOLED players into %d skill-differentiated groups of up to %d using deterministic stats-based scoring. " +
                         "%d Wildcard player(s) excluded.",
-                eligiblePlayers.size(), totalGroups, GROUP_SIZE, wildcardCount));
+                eligiblePlayerCount, totalGroups, GROUP_SIZE, wildcardCount));
         return response;
     }
 
-    private Map<String, List<PlayerResponseProjection>> groupBySkill(List<PlayerResponseProjection> players) {
-        Map<String, List<PlayerResponseProjection>> result = new LinkedHashMap<>();
-        result.put("All-Rounder", new ArrayList<>());
-        result.put("Batsman", new ArrayList<>());
-        result.put("Bowler", new ArrayList<>());
-
-        for (PlayerResponseProjection p : players) {
-            result.computeIfAbsent(normalizeSkill(p.getSkillName()), k -> new ArrayList<>()).add(p);
-        }
-
-        result.entrySet().removeIf(e -> e.getValue().isEmpty());
-        return result;
-    }
-
-    private String normalizeSkill(String raw) {
-        if (raw == null) return "Unknown";
-        return switch (raw.trim().toUpperCase()) {
+    private String normalizeSkill(String rawSkill) {
+        if (rawSkill == null) return "Unknown";
+        return switch (rawSkill.trim().toUpperCase()) {
             case "BATSMAN", "BAT"                         -> "Batsman";
             case "BOWLER", "BOWL"                         -> "Bowler";
             case "ALL-ROUNDER", "ALLROUNDER", "ALL ROUNDER",
                  "ALL_ROUNDER", "ALLROUND"                -> "All-Rounder";
             case "WILDCARD", "WILD CARD", "WILD"          -> "Wildcard";
-            default                                       -> raw.trim();
+            default                                       -> rawSkill.trim();
         };
     }
 
     private Map<Integer, Double> scorePlayers(List<PlayerResponseProjection> players) {
         return players.stream()
                 .map(p -> new PlayerScore(p.getId(), p.getName(), calculatePlayerScore(parseStats(p.getStats()))))
-                .collect(HashMap::new, (m, p) -> m.put(p.playerId(), p.score()), HashMap::putAll);
+                .collect(HashMap::new, (map, playerScore) -> map.put(playerScore.playerId(), playerScore.score()), HashMap::putAll);
     }
 
     private double calculatePlayerScore(Map<String, Object> stats) {
@@ -129,8 +146,8 @@ public class StatsDistributionService {
     private PlayerGroupingResponse.SkillGroup buildSkillGroup(
             String skill, List<PlayerResponseProjection> players, Map<Integer, Double> scoreByPlayerId) {
 
-        List<PlayerResponseProjection> sorted = new ArrayList<>(players);
-        sorted.sort(Comparator
+        List<PlayerResponseProjection> sortedPlayers = new ArrayList<>(players);
+        sortedPlayers.sort(Comparator
                 .comparingDouble((PlayerResponseProjection p) -> scoreByPlayerId.getOrDefault(p.getId(), 0.0))
                 .reversed()
                 .thenComparing(p -> p.getName() == null ? "" : p.getName())
@@ -138,8 +155,8 @@ public class StatsDistributionService {
 
         List<PlayerGroupingResponse.PlayerGroup> groups = new ArrayList<>();
         int groupNumber = 1;
-        for (int i = 0; i < sorted.size(); i += GROUP_SIZE) {
-            List<PlayerResponseProjection> slice = sorted.subList(i, Math.min(i + GROUP_SIZE, sorted.size()));
+        for (int i = 0; i < sortedPlayers.size(); i += GROUP_SIZE) {
+            List<PlayerResponseProjection> slice = sortedPlayers.subList(i, Math.min(i + GROUP_SIZE, sortedPlayers.size()));
 
             List<PlayerGroupingResponse.ScoredPlayer> scoredPlayers = slice.stream().map(p ->
                     new PlayerGroupingResponse.ScoredPlayer(p.getId(), p.getName(),
@@ -166,4 +183,3 @@ public class StatsDistributionService {
     private record PlayerScore(Integer playerId, String name, double score) {
     }
 }
-
